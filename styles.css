@@ -102,6 +102,7 @@ p,li,span,label,td,th,h1,h2,h3,h4,h5,h6{overflow-wrap:break-word;word-break:brea
 ::-webkit-scrollbar-thumb{background:var(--scrollbar-color, var(--muted));border-radius:var(--scrollbar-radius, 999px)}
 
 .site-footer{text-align:center;padding:20px;color:var(--muted)}
+.last-deploy{margin-top:4px;font-size:0.65rem;color:var(--muted);opacity:0.6}
 .update-info-link{background:none;border:none;color:inherit;cursor:inherit;padding:0;font-size:inherit;text-decoration:none;font-family:inherit;transition:none}
 .update-info-link:hover{color:inherit}
 
