@@ -1,5 +1,5 @@
 {
-  "name": "web-cremamini-site",
+  "name": "web-picklayer",
   "version": "1.0.0",
   "description": "크로스 플랫폼 디자인 시스템으로, 다양한 스타일과 테마를 지원하는 UI 컴포넌트 라이브러리입니다. 개발자와 디자이너가 빠르게 고품질의 사용자 인터페이스를 만들 수 있도록 지원합니다.",
   "main": "build.js",
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vrwolf1004/web-cremamini-site.git"
+    "url": "git+https://github.com/vrwolf1004/web-picklayer.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/vrwolf1004/web-cremamini-site/issues"
+    "url": "https://github.com/vrwolf1004/web-picklayer/issues"
   },
-  "homepage": "https://github.com/vrwolf1004/web-cremamini-site#readme"
+  "homepage": "https://github.com/vrwolf1004/web-picklayer#readme"
 }
