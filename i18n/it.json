@@ -107,6 +107,8 @@
   "selectReportReason": "Seleziona un motivo per la segnalazione",
   "reportSuccess": "Grazie per la tua segnalazione!",
   "reportFailed": "Segnalazione fallita",
+  "reportDuplicate": "Hai già segnalato questo commento",
+  "commentRateLimited": "Stai pubblicando commenti troppo velocemente. Riprova più tardi.",
   "howToUseTitle": "Come utilizzare questo tema",
   "howToStepDownload": "Scarica: Fai clic su",
   "howToDownloadBtn": "⬇ Scarica CSS",

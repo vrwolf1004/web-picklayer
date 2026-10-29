@@ -107,6 +107,8 @@
   "selectReportReason": "Veuillez sélectionner un motif",
   "reportSuccess": "Merci de votre signalement!",
   "reportFailed": "Échec du signalement",
+  "reportDuplicate": "Vous avez déjà signalé ce commentaire",
+  "commentRateLimited": "Vous publiez des commentaires trop rapidement. Réessayez plus tard.",
   "howToUseTitle": "Comment utiliser ce thème",
   "howToStepDownload": "Télécharger: Cliquez sur",
   "howToDownloadBtn": "⬇ Télécharger CSS",

@@ -107,6 +107,8 @@
   "selectReportReason": "Выберите причину жалобы",
   "reportSuccess": "Спасибо за вашу жалобу!",
   "reportFailed": "Ошибка при подаче жалобы",
+  "reportDuplicate": "Вы уже пожаловались на этот комментарий",
+  "commentRateLimited": "Слишком много комментариев за короткое время. Повторите попытку позже.",
   "howToUseTitle": "Как использовать эту тему",
   "howToStepDownload": "Загрузить: Нажмите на",
   "howToDownloadBtn": "⬇ Загрузить CSS",

@@ -107,6 +107,8 @@
   "selectReportReason": "Bitte wählen Sie einen Grund aus",
   "reportSuccess": "Danke für deinen Bericht!",
   "reportFailed": "Meldung fehlgeschlagen",
+  "reportDuplicate": "Diesen Kommentar hast du bereits gemeldet",
+  "commentRateLimited": "Du postest zu schnell hintereinander. Bitte versuche es später erneut.",
   "howToUseTitle": "So verwenden Sie dieses Design",
   "howToStepDownload": "Herunterladen: Klicken Sie auf",
   "howToDownloadBtn": "⬇ CSS herunterladen",

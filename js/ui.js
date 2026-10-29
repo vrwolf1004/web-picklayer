@@ -1,8 +1,9 @@
 // ── Theme & UI Components (통합) ──────────────────────────────
-import { showToast, $, $all } from './common.js';
+import { showToast, $, $all, createTextElement } from './common.js';
 import { DARK_THEMES, MENU_ICON_MAP_LANG, FALLBACK_THEMES } from './globals.js';
 import { getLocaleString, loadLocale } from './i18n.js';
 import { containsBadword } from './badwords.js';
+import { getCommentRateWait, recordCommentPost } from './comment-rate.js';
 
 // ════════════════════════════════════════════════════════════════
 // THEME FUNCTIONS
@@ -96,6 +97,43 @@ function renderThemePicker(){
   setTheme(saved);
 }
 
+// Action panel under the theme intro; the translated labels are set with textContent
+function buildThemeActions(useItText, ratingText){
+  const section = createTextElement('div', undefined, { class: 'theme-actions-section', style: 'margin-top: 0; padding: 12px; background: rgba(0,0,0,0.02); border-radius: 6px; margin-bottom: 16px;' });
+
+  const buttons = createTextElement('div', undefined, { style: 'display: flex; gap: 8px; align-items: center; margin-bottom: 16px;' });
+  buttons.append(
+    createTextElement('button', '⬇ Download', { id: 'download-btn-intro', type: 'button', style: 'flex: 1; padding: 8px 12px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap;' }),
+    createTextElement('button', '📋 Copy', { id: 'copy-btn-intro', type: 'button', style: 'flex: 1; padding: 8px 12px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap;' }),
+    createTextElement('button', '❓ How to', { id: 'howto-btn-intro', type: 'button', style: 'flex: 1; padding: 8px 12px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap;' })
+  );
+
+  const stats = createTextElement('div', undefined, { class: 'theme-stats', style: 'display: flex; gap: 16px; padding: 8px 0; font-size: 0.9rem; margin-bottom: 12px;' });
+  const ratingStat = createTextElement('span', '⭐ — ', { class: 'stat-rating', style: 'display: flex; align-items: center; gap: 4px;' });
+  ratingStat.appendChild(createTextElement('small', '(0)'));
+  stats.append(
+    ratingStat,
+    createTextElement('span', '👍 0', { class: 'stat-likes', style: 'display: flex; align-items: center; gap: 4px;' }),
+    createTextElement('span', '📥 0', { class: 'stat-downloads', style: 'display: flex; align-items: center; gap: 4px;' })
+  );
+
+  const engagement = createTextElement('div', undefined, { class: 'theme-engagement', style: 'display: flex; gap: 8px; align-items: center;' });
+  engagement.append(
+    createTextElement('label', '평가하기:', { style: 'font-size: 0.85rem; color: var(--muted);' }),
+    createTextElement('div', undefined, { class: 'rating-selector', style: 'display: flex; gap: 4px;' }),
+    createTextElement('button', '👍', { class: 'like-btn-intro', type: 'button', style: 'padding: 6px 10px; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #ff69b4;' })
+  );
+
+  section.append(
+    createTextElement('div', useItText, { style: 'font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 8px;' }),
+    buttons,
+    createTextElement('div', ratingText, { style: 'font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 8px;' }),
+    stats,
+    engagement
+  );
+  return section;
+}
+
 async function renderThemeIntro(selectedId){
   const container = document.getElementById('theme-intro');
   const themeContent = document.getElementById('theme-content');
@@ -103,9 +141,15 @@ async function renderThemeIntro(selectedId){
   if(!container) return;
   if(!selectedId){
     const header = (window._locale && window._locale['themeListHeader']) ? window._locale['themeListHeader'] : 'Theme introductions';
-    container.innerHTML = `<h4>${header}</h4><ul>${(window._themes || []).map(t=>`<li><strong>${t.name}</strong> — ${getLocalizedThemeDesc(t.id,t.description)}</li>`).join('')}</ul>`;
+    const list = document.createElement('ul');
+    (window._themes || []).forEach(t => {
+      const li = document.createElement('li');
+      li.append(createTextElement('strong', t.name), ` — ${getLocalizedThemeDesc(t.id, t.description)}`);
+      list.appendChild(li);
+    });
+    container.replaceChildren(createTextElement('h4', header), list);
     if(pageTitle) pageTitle.textContent = (window._locale && window._locale['pageTitle']) ? window._locale['pageTitle'] : 'Sample Page';
-    if(themeContent) themeContent.innerHTML = '';
+    if(themeContent) themeContent.replaceChildren();
     return;
   }
   const t = (window._themes || []).find(x=>x.id===selectedId) || FALLBACK_THEMES.find(x=>x.id===selectedId);
@@ -114,30 +158,8 @@ async function renderThemeIntro(selectedId){
     const useItText = (window._locale && window._locale['themeActionsUseIt']) ? window._locale['themeActionsUseIt'] : '이 테마를 써볼까요?';
     const ratingText = (window._locale && window._locale['themeActionsRating']) ? window._locale['themeActionsRating'] : '이 테마 어떤가요?';
 
-    const actionsHTML = `
-      <div class="theme-actions-section" style="margin-top: 0; padding: 12px; background: rgba(0,0,0,0.02); border-radius: 6px; margin-bottom: 16px;">
-        <div style="font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 8px;">${useItText}</div>
-        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
-          <button id="download-btn-intro" type="button" style="flex: 1; padding: 8px 12px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap;">⬇ Download</button>
-          <button id="copy-btn-intro" type="button" style="flex: 1; padding: 8px 12px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap;">📋 Copy</button>
-          <button id="howto-btn-intro" type="button" style="flex: 1; padding: 8px 12px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap;">❓ How to</button>
-        </div>
-        <div style="font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 8px;">${ratingText}</div>
-        <div class="theme-stats" style="display: flex; gap: 16px; padding: 8px 0; font-size: 0.9rem; margin-bottom: 12px;">
-          <span class="stat-rating" style="display: flex; align-items: center; gap: 4px;">⭐ — <small>(0)</small></span>
-          <span class="stat-likes" style="display: flex; align-items: center; gap: 4px;">👍 0</span>
-          <span class="stat-downloads" style="display: flex; align-items: center; gap: 4px;">📥 0</span>
-        </div>
-        <div class="theme-engagement" style="display: flex; gap: 8px; align-items: center;">
-          <label style="font-size: 0.85rem; color: var(--muted);">평가하기:</label>
-          <div class="rating-selector" style="display: flex; gap: 4px;"></div>
-          <button class="like-btn-intro" type="button" style="padding: 6px 10px; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #ff69b4;">👍</button>
-        </div>
-      </div>
-    `;
-    const guideHTML = `<p>${getLocalizedThemeDesc(t.id,t.description)}</p>`;
-    container.innerHTML = guideHTML;
-    if(themeContent) themeContent.innerHTML = actionsHTML;
+    container.replaceChildren(createTextElement('p', getLocalizedThemeDesc(t.id, t.description)));
+    if(themeContent) themeContent.replaceChildren(buildThemeActions(useItText, ratingText));
 
     // 다운로드/복사/사용방법 버튼 이벤트 리스너
     const dlBtn = document.getElementById('download-btn-intro');
@@ -155,7 +177,7 @@ async function renderThemeIntro(selectedId){
         const allBtns = ratingContainer.querySelectorAll('button');
         allBtns.forEach((btn, idx) => {
           const btnRating = idx + 1;
-          btn.innerHTML = (btnRating <= selectedRating) ? '⭐' : '☆';
+          btn.textContent = (btnRating <= selectedRating) ? '⭐' : '☆';
         });
       };
 
@@ -163,7 +185,7 @@ async function renderThemeIntro(selectedId){
         const ratingBtn = document.createElement('button');
         ratingBtn.type = 'button';
         ratingBtn.style.cssText = 'background: transparent; border: none; font-size: 1rem; cursor: pointer; color: #ffd700; text-shadow: 0 0 4px rgba(0,0,0,0.5); padding: 4px 2px; border-radius: 4px; transition: all 0.2s ease;';
-        ratingBtn.innerHTML = '☆';
+        ratingBtn.textContent = '☆';
         ratingBtn.dataset.rating = i;
         ratingBtn.title = `Rate ${i}/5`;
         ratingBtn.addEventListener('click', ()=> {
@@ -192,7 +214,7 @@ async function renderThemeIntro(selectedId){
 
     if(pageTitle) pageTitle.textContent = (window._locale && window._locale['pageTitle']) ? t.name : t.name;
   }else{
-    container.innerHTML = `<h4>테마</h4><p>설명 없음</p>`;
+    container.replaceChildren(createTextElement('h4', '테마'), createTextElement('p', '설명 없음'));
     if(pageTitle) pageTitle.textContent = '샘플 페이지';
   }
 }
@@ -534,6 +556,12 @@ function initMobileCommentForm(){
       return;
     }
 
+    // Client-side abuse limit (see comment-rate.js); not a security control
+    if (getCommentRateWait() > 0) {
+      showToast(getLocaleString('commentRateLimited') || '짧은 시간에 댓글을 너무 많이 등록했습니다. 잠시 후 다시 시도하세요.', 'error');
+      return;
+    }
+
     errorEl.textContent = '';
     submitBtn.disabled = true;
 
@@ -551,6 +579,7 @@ function initMobileCommentForm(){
       input.value = '';
       charCount.textContent = '0 / 100';
       _lastCommentTime = Date.now();
+      recordCommentPost();
       startCooldown(submitBtn);
       try{ renderComments(); }catch(e){}
     }catch(e){

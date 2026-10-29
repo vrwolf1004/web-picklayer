@@ -107,6 +107,8 @@
   "selectReportReason": "请选择举报理由",
   "reportSuccess": "感谢你的举报！",
   "reportFailed": "举报失败",
+  "reportDuplicate": "您已举报过该评论",
+  "commentRateLimited": "评论发布过于频繁，请稍后再试。",
   "howToUseTitle": "如何使用此主题",
   "howToStepDownload": "下载: 点击下面的",
   "howToDownloadBtn": "⬇ 下载 CSS",

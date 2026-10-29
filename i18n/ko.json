@@ -107,6 +107,8 @@
   "selectReportReason": "신고 사유를 선택해주세요",
   "reportSuccess": "신고되었습니다. 감사합니다!",
   "reportFailed": "신고에 실패했습니다",
+  "reportDuplicate": "이미 신고한 댓글입니다",
+  "commentRateLimited": "짧은 시간에 댓글을 너무 많이 등록했습니다. 잠시 후 다시 시도하세요.",
   "howToUseTitle": "이 테마를 사용하는 방법",
   "howToStepDownload": "다운로드: 아래의",
   "howToDownloadBtn": "⬇ CSS 다운로드",

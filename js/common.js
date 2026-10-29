@@ -48,3 +48,13 @@ export function hideLoadingOverlay() {
     loadingOverlay.classList.add('hidden');
   }
 }
+
+// Creates an element with attributes; text goes in via textContent, so it is never parsed as markup
+export function createTextElement(tag, text, attrs = {}) {
+  const el = document.createElement(tag);
+  for (const [name, value] of Object.entries(attrs)) {
+    el.setAttribute(name, value);
+  }
+  if (text !== undefined) el.textContent = text;
+  return el;
+}

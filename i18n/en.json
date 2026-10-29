@@ -107,6 +107,8 @@
     "selectReportReason": "Please select a reason for reporting",
     "reportSuccess": "Thank you for your report!",
     "reportFailed": "Failed to report",
+    "reportDuplicate": "You have already reported this comment",
+    "commentRateLimited": "You are posting comments too quickly. Please try again later.",
     "howToUseTitle": "How to use this theme",
     "howToStepDownload": "Download: Click the",
     "howToDownloadBtn": "⬇ Download CSS",

@@ -107,6 +107,8 @@
   "selectReportReason": "Valitse ilmoitusperuste",
   "reportSuccess": "Kiitos ilmoituksestasi!",
   "reportFailed": "Ilmoitus epäonnistui",
+  "reportDuplicate": "Olet jo ilmoittanut tästä kommentista",
+  "commentRateLimited": "Kommentoit liian nopeasti. Yritä myöhemmin uudelleen.",
   "howToUseTitle": "Kuinka käyttää tätä teemaa",
   "howToStepDownload": "Lataa: Napsauta",
   "howToDownloadBtn": "⬇ Lataa CSS",

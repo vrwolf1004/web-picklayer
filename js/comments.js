@@ -3,6 +3,7 @@ import { $, $all, showToast } from './common.js';
 import { COMMENT_MAX, COMMENT_COOLDOWN } from './globals.js';
 import { getLocaleString } from './i18n.js';
 import { containsBadword } from './badwords.js';
+import { getCommentRateWait, recordCommentPost } from './comment-rate.js';
 
 function getCurrentThemeId() {
   return localStorage.getItem('pl_theme') || 'basic';
@@ -178,6 +179,12 @@ function toggleReplyForm(parentId, parentEl) {
     const err = validateComment(text);
     if (err) { charEl.style.color = 'var(--error, #e53e3e)'; charEl.textContent = err; return; }
 
+    // Client-side abuse limit (see comment-rate.js); not a security control
+    if (getCommentRateWait() > 0) {
+      showToast(getLocaleString('commentRateLimited') || '짧은 시간에 댓글을 너무 많이 등록했습니다. 잠시 후 다시 시도하세요.', 'error');
+      return;
+    }
+
     const now = Date.now();
     const elapsed = now - window._lastCommentTime;
     if (window._lastCommentTime && elapsed < COMMENT_COOLDOWN) {
@@ -197,6 +204,7 @@ function toggleReplyForm(parentId, parentEl) {
         themeId: getCurrentThemeId()
       });
       window._lastCommentTime = Date.now();
+      recordCommentPost();
       form.remove();
     } catch (e) {
       charEl.style.color = 'var(--error, #e53e3e)';
@@ -323,7 +331,12 @@ async function submitReport() {
     showToast(getLocaleString('reportSuccess') || '신고되었습니다. 감사합니다!', 'success');
     closeReportModal();
   } catch (e) {
-    showToast(getLocaleString('reportFailed') || '신고에 실패했습니다', 'error');
+    // A second report from the same user targets the same document ID, which the rules deny as permission-denied
+    const isDuplicate = e?.code === 'permission-denied';
+    const message = isDuplicate
+      ? (getLocaleString('reportDuplicate') || '이미 신고한 댓글입니다')
+      : (getLocaleString('reportFailed') || '신고에 실패했습니다');
+    showToast(message, 'error');
     console.error(e);
   }
 }
@@ -390,6 +403,12 @@ function initComments() {
     const err = validateComment(text);
     if (err) { showCommentError(err); return; }
 
+    // Client-side abuse limit (see comment-rate.js); not a security control
+    if (getCommentRateWait() > 0) {
+      showToast(getLocaleString('commentRateLimited') || '짧은 시간에 댓글을 너무 많이 등록했습니다. 잠시 후 다시 시도하세요.', 'error');
+      return;
+    }
+
     const now = Date.now();
     const elapsed = now - window._lastCommentTime;
     if (window._lastCommentTime && elapsed < COMMENT_COOLDOWN) {
@@ -419,6 +438,7 @@ function initComments() {
       charCount.textContent = `0 / ${COMMENT_MAX}`;
       showCommentError('');
       window._lastCommentTime = Date.now();
+      recordCommentPost();
       startCooldown(submitBtn);
     } catch (err) {
       console.error('[initComments] Comment submission error:', err);
