@@ -53,7 +53,6 @@ function hideLoadingBar() {
 }
 
 async function initDashboard() {
-  console.log('[대시보드] 초기화 시작');
 
   // 1️⃣ 로딩 상태 시작
   showLoadingBar();
@@ -65,16 +64,12 @@ async function initDashboard() {
 
   try {
     // 3️⃣ 데이터 로드
-    console.log('[대시보드] 데이터 로드 중...');
     await loadReports();
     await loadComments();
-    console.log(`[대시보드] 신고 ${currentReports.length}개, 댓글 ${currentComments.length}개 로드`);
 
     // 3️⃣-1️⃣ 자동 신고 처리 실행 (목업)
-    console.log('[대시보드] 자동 신고 처리 검사 중...');
     const autoHandleResult = await executeAutoReportHandler(currentReports, currentComments);
     if (autoHandleResult.processed > 0) {
-      console.log(`[대시보드] 자동 처리 대상: ${autoHandleResult.processed}개`);
       showToast(`자동 신고 처리: ${autoHandleResult.processed}개 댓글`, 'info', 3000);
     }
 
@@ -104,17 +99,14 @@ async function initDashboard() {
     }
 
     // 5️⃣ 화면 렌더링
-    console.log('[대시보드] 화면 렌더링 중...');
     renderReportsList();
     updateStats();
     updateAutoHandlerIndicator();
-    console.log('[대시보드] 렌더링 완료');
 
     // 6️⃣ 로딩 완료
     if (dashboardLoadingTimer) clearTimeout(dashboardLoadingTimer);
     hideLoadingBar();
     showToast('페이지 로딩완료', 'success', 2000);
-    console.log('[대시보드] 완료!');
   } catch (error) {
     console.error('[대시보드] 오류 발생:', error);
     if (dashboardLoadingTimer) clearTimeout(dashboardLoadingTimer);
@@ -135,7 +127,6 @@ async function loadReports() {
     try {
       await signInAnonymously(auth);
     } catch (e) {
-      console.log('Already authenticated');
     }
 
     const { db, collection: col, getDocs, query, orderBy, limit } = window._firebase;
@@ -147,7 +138,6 @@ async function loadReports() {
       ...doc.data()
     }));
 
-    console.log('Reports loaded:', currentReports.length);
   } catch (e) {
     console.error('Failed to load reports:', e);
   }
@@ -169,7 +159,6 @@ async function loadComments() {
       ...doc.data()
     }));
 
-    console.log('Comments loaded:', currentComments.length);
   } catch (e) {
     console.error('Failed to load comments:', e);
   }
@@ -204,40 +193,74 @@ function renderReportsList() {
   });
 
   if (filtered.length === 0) {
-    listEl.innerHTML = '<p class="empty-message">신고된 댓글이 없습니다.</p>';
+    const empty = document.createElement('p');
+    empty.className = 'empty-message';
+    empty.textContent = '신고된 댓글이 없습니다.';
+    listEl.replaceChildren(empty);
     return;
   }
 
-  listEl.innerHTML = filtered.map(([commentId, reports]) => {
-    const comment = getCommentById(commentId);
-    if (!comment) return '';
+  listEl.replaceChildren(...filtered
+    .map(([commentId, reports]) => {
+      const comment = getCommentById(commentId);
+      return comment ? createReportItem(commentId, comment, reports) : null;
+    })
+    .filter(Boolean));
+}
 
-    const reasons = reports.map(r => r.reason || 'unknown');
-    const uniqueReasons = [...new Set(reasons)];
+// Builds one report row with textContent only; report fields come from the database and are not trusted
+function createReportItem(commentId, comment, reports) {
+  const reporterCount = uniqueReportsByReporter(reports).length;
+  const uniqueReasons = [...new Set(reports.map(r => r.reason || 'unknown'))];
 
-    // 신고 상태 (모두 같다고 가정)
-    const status = reports[0]?.status || 'pending';
+  // 신고 상태 (모두 같다고 가정)
+  const status = reports[0]?.status || 'pending';
+  const statusClass = ['pending', 'approved', 'rejected'].includes(status) ? status : 'pending';
 
-    return `
-      <div class="report-item" onclick="openReportModal('${commentId}')">
-        <div class="report-info">
-          <h3>${escapeHtml(comment.text.substring(0, 50))}${comment.text.length > 50 ? '...' : ''}</h3>
-          <p class="report-meta">
-            신고 수: <strong>${reports.length}명</strong> •
-            테마: <strong>${comment.themeId || 'basic'}</strong>
-          </p>
-          <div>
-            ${uniqueReasons.map(reason => `<span class="report-reason-badge">${escapeHtml(getReasonLabel(reason))}</span>`).join('')}
-            <span class="report-status-badge ${status}">${getStatusLabel(status)}</span>
-          </div>
-        </div>
-        <div class="report-count">
-          <span class="report-count-number">${reports.length}</span>
-          <span class="report-count-label">신고</span>
-        </div>
-      </div>
-    `;
-  }).join('');
+  const item = document.createElement('div');
+  item.className = 'report-item';
+  item.addEventListener('click', () => openReportModal(commentId));
+
+  const info = document.createElement('div');
+  info.className = 'report-info';
+
+  const title = document.createElement('h3');
+  title.textContent = comment.text.substring(0, 50) + (comment.text.length > 50 ? '...' : '');
+
+  const meta = document.createElement('p');
+  meta.className = 'report-meta';
+  const countStrong = document.createElement('strong');
+  countStrong.textContent = `${reporterCount}명`;
+  const themeStrong = document.createElement('strong');
+  themeStrong.textContent = comment.themeId || 'basic';
+  meta.append('신고 수: ', countStrong, ' • 테마: ', themeStrong);
+
+  const badges = document.createElement('div');
+  uniqueReasons.forEach(reason => {
+    const badge = document.createElement('span');
+    badge.className = 'report-reason-badge';
+    badge.textContent = getReasonLabel(reason);
+    badges.appendChild(badge);
+  });
+  const statusBadge = document.createElement('span');
+  statusBadge.className = `report-status-badge ${statusClass}`;
+  statusBadge.textContent = getStatusLabel(statusClass);
+  badges.appendChild(statusBadge);
+
+  info.append(title, meta, badges);
+
+  const count = document.createElement('div');
+  count.className = 'report-count';
+  const countNumber = document.createElement('span');
+  countNumber.className = 'report-count-number';
+  countNumber.textContent = String(reporterCount);
+  const countLabel = document.createElement('span');
+  countLabel.className = 'report-count-label';
+  countLabel.textContent = '신고';
+  count.append(countNumber, countLabel);
+
+  item.append(info, count);
+  return item;
 }
 
 function openReportModal(commentId) {
@@ -252,19 +275,23 @@ function openReportModal(commentId) {
   const time = comment.time ? new Date(comment.time.toDate?.() || comment.time).toLocaleString('ko-KR') : '알 수 없음';
   document.getElementById('modal-comment-meta').textContent = `작성일: ${time} • 테마: ${comment.themeId || 'basic'} • 작성자 UID: ${comment.uid.substring(0, 8)}...`;
 
-  // 신고 사유별 카운트
+  // 신고 사유별 카운트 (사용자별 1회)
+  const reporters = uniqueReportsByReporter(reports);
   const reasonCounts = {};
-  reports.forEach(r => {
+  reporters.forEach(r => {
     const reason = r.reason || 'unknown';
     reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
   });
 
-  const reasonsHtml = Object.entries(reasonCounts)
-    .map(([reason, count]) => `<div class="report-reason-item">${escapeHtml(getReasonLabel(reason))}: ${count}명</div>`)
-    .join('');
+  const reasonItems = Object.entries(reasonCounts).map(([reason, count]) => {
+    const item = document.createElement('div');
+    item.className = 'report-reason-item';
+    item.textContent = `${getReasonLabel(reason)}: ${count}명`;
+    return item;
+  });
 
-  document.getElementById('modal-report-reasons').innerHTML = reasonsHtml;
-  document.getElementById('modal-report-count').textContent = `${reports.length}명`;
+  document.getElementById('modal-report-reasons').replaceChildren(...reasonItems);
+  document.getElementById('modal-report-count').textContent = `${reporters.length}명`;
 
   // 버튼 이벤트
   const approveBtn = document.getElementById('modal-approve-btn');
@@ -364,7 +391,6 @@ function updateAutoHandlerIndicator() {
   const indicatorEl = document.getElementById('auto-handler-indicator');
 
   if (!indicatorEl) {
-    console.log('[자동 신고 처리] 표시 요소 없음 (stats only)', stats);
     return;
   }
 
@@ -385,7 +411,6 @@ function updateAutoHandlerIndicator() {
     </div>
   `;
 
-  console.log('[자동 신고 처리] 통계 업데이트:', stats);
 }
 
 function getReasonLabel(reason) {
@@ -405,12 +430,6 @@ function getStatusLabel(status) {
     'rejected': '반려됨'
   };
   return labels[status] || '대기 중';
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 function showAutoHandlerDetails() {
@@ -461,7 +480,7 @@ function showAutoHandlerDetails() {
       const text = comment?.text.substring(0, 50) || '(삭제됨)';
       detailsHtml += `
         <li>
-          [${idx + 1}] "${escapeHtml(text)}..."
+          [${idx + 1}] "${text}..."
           <br/>
           <small style="color: #666;">신고 ${candidate.decision.reportCount}명 | 점수 ${candidate.decision.score}점 | ${candidate.decision.reason}</small>
         </li>
@@ -481,7 +500,4 @@ function showAutoHandlerDetails() {
     return '';
   }));
 
-  console.group('[자동 신고 처리] 상세 분석');
-  debugReportAnalysis(currentReports, currentComments);
-  console.groupEnd();
 }

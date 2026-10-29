@@ -16,8 +16,23 @@ const AUTO_DELETE_THRESHOLDS = {
 };
 
 /**
- * 신고에 대한 가중치 점수 계산
+ * 사용자(uid)별 신고 1건만 남김. 같은 사용자의 중복 신고는 한 번만 센다.
  * @param {Array} reports - commentId별 신고 배열
+ * @returns {Array} 사용자별 첫 신고 배열
+ */
+function uniqueReportsByReporter(reports) {
+  const seen = new Set();
+  return reports.filter(report => {
+    const key = report.uid || report.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
+ * 신고에 대한 가중치 점수 계산
+ * @param {Array} reports - 사용자별로 정리된 신고 배열
  * @returns {number} 총 가중치 점수
  */
 function calculateReportScore(reports) {
@@ -41,8 +56,9 @@ function shouldAutoDelete(reports) {
     };
   }
 
-  const reportCount = reports.length;
-  const weightedScore = calculateReportScore(reports);
+  const reporters = uniqueReportsByReporter(reports);
+  const reportCount = reporters.length;
+  const weightedScore = calculateReportScore(reporters);
 
   // 신고 수 확인
   if (reportCount >= AUTO_DELETE_THRESHOLDS.reportCount) {
@@ -112,12 +128,10 @@ function findAutoDeleteCandidates(allReports) {
  * @returns {Promise<Object>} { processed: number, details: Array }
  */
 async function executeAutoReportHandler(allReports, allComments) {
-  console.log('[자동 신고 처리] 시작');
 
   const candidates = findAutoDeleteCandidates(allReports);
 
   if (candidates.length === 0) {
-    console.log('[자동 신고 처리] 처리 대상 없음');
     return {
       processed: 0,
       details: [],
@@ -141,12 +155,6 @@ async function executeAutoReportHandler(allReports, allComments) {
       timestamp: new Date().toISOString()
     };
 
-    console.log(`[자동 신고 처리] 댓글 자동 삭제 처리`);
-    console.log(`  - commentId: ${commentId}`);
-    console.log(`  - 신고 수: ${decision.reportCount}명`);
-    console.log(`  - 가중치 점수: ${decision.score}점`);
-    console.log(`  - 사유: ${decision.reason}`);
-    console.log(`  - 텍스트: "${detail.comment}"`);
 
     try {
       if (!window._firebase) {
@@ -164,7 +172,6 @@ async function executeAutoReportHandler(allReports, allComments) {
         autoDeletedAt: new Date()
       });
 
-      console.log(`  ✅ 댓글 삭제 완료: ${commentId}`);
 
       // 2. 신고들을 'auto_approved'로 업데이트
       for (const report of reports) {
@@ -174,7 +181,6 @@ async function executeAutoReportHandler(allReports, allComments) {
         });
       }
 
-      console.log(`  ✅ 신고 ${reports.length}개 자동 승인 완료`);
       detail.status = 'auto_deleted_success';
 
     } catch (error) {
@@ -186,7 +192,6 @@ async function executeAutoReportHandler(allReports, allComments) {
     details.push(detail);
   }
 
-  console.log(`[자동 신고 처리] 완료: ${details.length}개 댓글 자동 처리`);
 
   return {
     processed: details.length,
@@ -235,37 +240,4 @@ function getAutoHandlerStats(allReports) {
     atRiskCount,
     totalComments: Object.keys(reportMap).length
   };
-}
-
-/**
- * 디버그: 신고 분석 결과 출력
- * @param {Array} allReports - 전체 신고 배열
- * @param {Array} allComments - 전체 댓글 배열
- */
-function debugReportAnalysis(allReports, allComments) {
-  console.group('[자동 신고 처리] 상세 분석');
-
-  const reportMap = {};
-  allReports.forEach(report => {
-    if (!reportMap[report.commentId]) {
-      reportMap[report.commentId] = [];
-    }
-    reportMap[report.commentId].push(report);
-  });
-
-  for (const [commentId, reports] of Object.entries(reportMap)) {
-    const decision = shouldAutoDelete(reports);
-    const comment = allComments.find(c => c.id === commentId);
-
-    console.group(`댓글 ${commentId}`);
-    console.log(`텍스트: "${comment?.text.substring(0, 50) || '(삭제됨)'}"`);
-    console.log(`신고 수: ${reports.length}`);
-    console.log(`가중치: ${REPORT_WEIGHTS[reports[0]?.reason] || 1} × ${reports.length}`);
-    console.log(`총 점수: ${decision.score}`);
-    console.log(`판정: ${decision.shouldDelete ? '❌ 자동 삭제' : '✅ 유지'}`);
-    console.log(`사유: ${decision.reason}`);
-    console.groupEnd();
-  }
-
-  console.groupEnd();
 }

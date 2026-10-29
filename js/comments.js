@@ -10,16 +10,13 @@ function getCurrentThemeId() {
 
 async function ensureAuth() {
   if (window._currentUid) {
-    console.log('[ensureAuth] Using cached uid:', window._currentUid);
     return window._currentUid;
   }
   
   try {
-    console.log('[ensureAuth] Signing in anonymously...');
     const { auth, signInAnonymously } = window._firebase;
     const cred = await signInAnonymously(auth);
     window._currentUid = cred.user.uid;
-    console.log('[ensureAuth] Anonymous sign-in successful, uid:', window._currentUid);
     return window._currentUid;
   } catch (e) {
     console.error('[ensureAuth] Sign-in failed:', e);
@@ -219,7 +216,6 @@ function toggleReplyForm(parentId, parentEl) {
 
 function renderCommentsList(comments) {
   window._cachedComments = comments;
-  console.log('[renderCommentsList] Total cached comments:', comments.length);
   const lists = [$('#comment-list'), $('#mobile-comment-list')].filter(l => l);
   if (lists.length === 0) {
     console.warn('[renderCommentsList] No comment list elements found');
@@ -227,9 +223,7 @@ function renderCommentsList(comments) {
   }
 
   const themeId = getCurrentThemeId();
-  console.log('[renderCommentsList] Current theme:', themeId);
   const themed = comments.filter(c => (c.themeId || 'basic') === themeId);
-  console.log('[renderCommentsList] Comments filtered for theme:', themed.length, 'comments');
 
   lists.forEach(list => {
     list.innerHTML = '';
@@ -239,7 +233,6 @@ function renderCommentsList(comments) {
     }
     const topLevel = themed.filter(c => !c.parentId);
     const replies = themed.filter(c => !!c.parentId);
-    console.log('[renderCommentsList] Top-level:', topLevel.length, 'Replies:', replies.length);
     topLevel.forEach(c => {
       const el = createCommentEl(c, false);
       const myReplies = replies.filter(r => r.parentId === c.id);
@@ -268,7 +261,6 @@ function showCommentListError(){
 }
 
 function renderComments() { 
-  console.log('[renderComments] Called. Cached comments:', window._cachedComments ? window._cachedComments.length : 0);
   renderCommentsList(window._cachedComments || []); 
 }
 
@@ -309,7 +301,7 @@ function closeReportModal() {
 }
 
 async function submitReport() {
-  const { db, collection: col, addDoc, serverTimestamp } = window._firebase;
+  const { db, doc, setDoc, serverTimestamp } = window._firebase;
   const commentId = document.getElementById('report-comment-id').value;
   const reason = document.querySelector('input[name="report-reason"]:checked')?.value;
 
@@ -320,7 +312,8 @@ async function submitReport() {
 
   try {
     const uid = await ensureAuth();
-    await addDoc(col(db, 'reports'), {
+    // One report per user per comment: the fixed document ID makes a second report an update, which the rules deny
+    await setDoc(doc(db, 'reports', `${commentId}_${uid}`), {
       commentId,
       reason,
       uid,
@@ -342,7 +335,6 @@ function subscribeComments() {
   }
   
   if (window._unsubscribeComments) {
-    console.log('[subscribeComments] Cleaning up previous subscription');
     window._unsubscribeComments();
     window._unsubscribeComments = null;
   }
@@ -351,12 +343,10 @@ function subscribeComments() {
   const { db, collection: col, onSnapshot, query, orderBy, limit } = window._firebase;
   const q = query(col(db, 'comments'), orderBy('time', 'desc'), limit(200));
   
-  console.log('[subscribeComments] Setting up Firebase listener...');
   window._unsubscribeComments = onSnapshot(
     q,
     snap => {
       const comments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      console.log('[subscribeComments] Received comments snapshot:', comments.length, 'comments');
       renderCommentsList(comments);
     },
     error => {
@@ -409,19 +399,14 @@ function initComments() {
     }
 
     try {
-      console.log('[initComments] Submitting comment...');
       window._submitting = true;
       submitBtn.disabled = true;
       
-      console.log('[initComments] Ensuring auth...');
       const uid = await ensureAuth();
-      console.log('[initComments] Auth successful, uid:', uid);
       
-      console.log('[initComments] Firebase object:', window._firebase ? 'exists' : 'NOT FOUND');
       const { db, collection: col, addDoc, serverTimestamp } = window._firebase;
       
       const themeId = getCurrentThemeId();
-      console.log('[initComments] Adding comment - text:', text.substring(0, 50), '..., theme:', themeId);
       
       await addDoc(col(db, 'comments'), {
         text, uid,
@@ -430,7 +415,6 @@ function initComments() {
         themeId
       });
       
-      console.log('[initComments] Comment added successfully');
       input.value = '';
       charCount.textContent = `0 / ${COMMENT_MAX}`;
       showCommentError('');

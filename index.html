@@ -47,18 +47,18 @@
   </script>
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-82VT64DNNE"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-82VT64DNNE', {
-      'anonymize_ip': true,
-      'allow_google_signals': true
-    });
-  </script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YVXKB946XE"></script>
+  <script src="js/analytics.js"></script>
   <!-- ES6 modules -->
   <script type="module" src="js/main.js"></script>
   <meta name="description" content="테마 미리보기와 익명 댓글 데모">
+  <link rel="canonical" href="https://www.picklayer.net/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="picklayer.net">
+  <meta property="og:title" content="picklayer.net — Themes Playground">
+  <meta property="og:description" content="테마 미리보기와 익명 댓글 데모">
+  <meta property="og:url" content="https://www.picklayer.net/">
   <link rel="icon" href="assets/picklayer-symbol.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/picklayer-symbol.svg">
   <meta name="theme-color" content="#ffffff">
@@ -443,15 +443,6 @@
     <small>© 2026 PickLayer.net. All rights <button id="update-info-btn" class="update-info-link" title="Click to see recent updates">reserved</button>. | <a href="privacy.html" style="color:inherit;text-decoration:none;cursor:pointer">Privacy</a> | <a href="terms.html" style="color:inherit;text-decoration:none;cursor:pointer">Terms</a> | <a href="about.html" style="color:inherit;text-decoration:none;cursor:pointer">About</a></small>
   </footer>
 
-  <script>
-    if (typeof kofiWidgetOverlay !== 'undefined') {
-      kofiWidgetOverlay.draw('dev_ohyt', {
-        'type': 'floating-chat',
-        'floating-chat.donateButton.text': 'Tip Me',
-        'floating-chat.donateButton.background-color': '#00b9fe',
-        'floating-chat.donateButton.text-color': '#fff'
-      });
-    }
-  </script>
+  <script src="js/kofi-widget.js"></script>
 </body>
 </html>

@@ -41,33 +41,26 @@ function updateMenuIcon(lang){
   const menuIcon = document.getElementById('menu-icon');
   if(!menuIcon) { console.warn('menu-icon element not found'); return; }
   const iconFile = MENU_ICON_MAP_LANG[lang] || 'menu-basic.svg';
-  console.log('updateMenuIcon:', lang, '→', iconFile);
   menuIcon.src = 'assets/' + iconFile;
 }
 
 function setTheme(id){
-  console.log('[setTheme] Theme changed:', id);
   loadThemeCss(id);
   document.body.className = 'theme-' + id;
   document.documentElement.style.colorScheme = DARK_THEMES.includes(id) ? 'dark' : 'light';
   localStorage.setItem('pl_theme', id);
-  console.log('[setTheme] localStorage pl_theme set to:', id);
   $all('#theme-list button').forEach(b=>b.classList.toggle('selected', b.dataset.id===id));
   const mobileMenuThemeList = document.getElementById('mobile-menu-theme-list');
   if(mobileMenuThemeList) mobileMenuThemeList.querySelectorAll('button').forEach(b=>b.classList.toggle('selected', b.dataset.id===id));
   const sel = $('#theme-select'); if(sel) sel.value = id;
   try{
-    console.log('[setTheme] Calling renderThemeIntro...');
     renderThemeIntro(id);
   }catch(e){}
   try{
-    console.log('[setTheme] Loading theme stats...');
     loadThemeStats(id);
   }catch(e){}
   try{
-    console.log('[setTheme] Calling renderComments...');
     renderComments();
-    console.log('[setTheme] renderComments completed');
   }catch(e){
     console.error('[setTheme] renderComments error:', e);
   }
@@ -76,7 +69,6 @@ function setTheme(id){
 function renderThemePicker(){
   const list = $('#theme-list');
   const select = $('#theme-select');
-  console.log('[renderThemePicker] Starting. list element:', list ? 'found' : 'NOT FOUND', 'select element:', select ? 'found' : 'NOT FOUND');
 
   (window._themes || []).forEach(t=>{
     const container = document.createElement('div');
@@ -87,7 +79,6 @@ function renderThemePicker(){
     btn.type='button'; btn.textContent=t.name; btn.dataset.id=t.id;
     btn.className = 'theme-btn';
     btn.addEventListener('click', ()=> {
-      console.log('[renderThemePicker] Theme button clicked:', t.id);
       setTheme(t.id);
     });
 
@@ -98,12 +89,10 @@ function renderThemePicker(){
   });
 
   select.addEventListener('change', ()=> {
-    console.log('[renderThemePicker] Select changed to:', select.value);
     setTheme(select.value);
   });
 
   const saved = localStorage.getItem('pl_theme') || 'basic';
-  console.log('[renderThemePicker] Initial theme from localStorage:', saved);
   setTheme(saved);
 }
 
@@ -334,7 +323,6 @@ async function trackDownload(themeId){
   if(lastDownloadTime){
     const elapsed = Date.now() - parseInt(lastDownloadTime);
     if(elapsed < 300000){
-      console.log(`[trackDownload] Rate limited for ${themeId}`);
       return;
     }
   }
@@ -358,7 +346,6 @@ async function trackDownload(themeId){
 
     localStorage.setItem(`lastDownload_${themeId}`, Date.now().toString());
 
-    console.log(`[trackDownload] ${themeId} download count increased`);
   }catch(e){
     console.error('Download tracking failed:', e);
   }
@@ -389,7 +376,7 @@ async function loadThemeStats(themeId){
 
     try{
       const downloadDoc = await window._firebase.getDoc(window._firebase.doc(db, 'theme_downloads', themeId));
-      downloadCount = downloadDoc.exists() ? downloadDoc.data().count : 0;
+      downloadCount = downloadDoc.exists() ? (Number(downloadDoc.data().count) || 0) : 0;
     }catch(e){}
 
     const avgRating = ratingCount > 0 ? (totalRating / ratingCount).toFixed(1) : 0;
@@ -406,15 +393,25 @@ async function loadThemeStats(themeId){
     // UI 업데이트
     const statsContainer = document.querySelector('#theme-intro .theme-stats');
     if(statsContainer){
-      const ratingText = ratingCount > 0 ? `⭐ ${avgRating} <small>(${ratingCount})</small>` : '⭐ — <small>(0)</small>';
-      statsContainer.innerHTML = `
-        <span class="stat-rating">${ratingText}</span>
-        <span class="stat-likes">👍 ${likeCount}</span>
-        <span class="stat-downloads">📥 ${downloadCount}</span>
-      `;
+      // Counts are coerced to numbers and written with textContent, so stored values cannot inject markup
+      const ratingEl = document.createElement('span');
+      ratingEl.className = 'stat-rating';
+      ratingEl.append(ratingCount > 0 ? `⭐ ${avgRating} ` : '⭐ — ');
+      const ratingSmall = document.createElement('small');
+      ratingSmall.textContent = `(${Number(ratingCount)})`;
+      ratingEl.appendChild(ratingSmall);
+
+      const likesEl = document.createElement('span');
+      likesEl.className = 'stat-likes';
+      likesEl.textContent = `👍 ${Number(likeCount)}`;
+
+      const downloadsEl = document.createElement('span');
+      downloadsEl.className = 'stat-downloads';
+      downloadsEl.textContent = `📥 ${Number(downloadCount)}`;
+
+      statsContainer.replaceChildren(ratingEl, likesEl, downloadsEl);
     }
 
-    console.log(`[loadThemeStats] ${themeId}:`, window._themeStats[themeId]);
   }catch(e){
     console.error('Stats loading failed:', e);
   }
@@ -444,7 +441,6 @@ function initFormSamples(){
   const ghost = document.getElementById('ghost-btn');
   if(ghost) ghost.addEventListener('click', ()=> alert((window._locale && window._locale.btnGhostClick) || 'Ghost 버튼 클릭'));
 
-  const input = document.getElementById('sample-input'); if(input) input.addEventListener('change', ()=> console.log('input:', input.value));
 }
 
 function initDataTable(){

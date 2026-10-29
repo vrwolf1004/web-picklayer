@@ -1,0 +1,94 @@
+rules_version = '2';
+
+// Draft: review before deploying. Not deployed by this change.
+// Admin writes need the custom claim admin=true, which depends on the admin auth change (see todo.md).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    // Comments and replies: anyone reads; a signed-in user creates their own; only the deleted flag changes
+    match /comments/{commentId} {
+      allow read: if true;
+
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.keys().hasOnly(['text', 'uid', 'time', 'parentId', 'themeId'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 100
+        && request.resource.data.time == request.time;
+
+      allow update: if isAdmin()
+        || (isOwner(resource.data.uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted'])
+          && request.resource.data.deleted == true);
+
+      allow delete: if isAdmin();
+    }
+
+    // Reports: one per comment per user. The document ID must be commentId_uid,
+    // so a second report from the same user is an update and is denied.
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+
+      allow create: if signedIn()
+        && reportId == request.resource.data.commentId + '_' + request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['commentId', 'reason', 'uid', 'time', 'themeId'])
+        && request.resource.data.reason in ['spam', 'badword', 'inappropriate', 'other']
+        && request.resource.data.time == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // Theme ratings: one per user per theme, rating 1-5
+    match /theme_ratings/{themeId}/ratings/{uid} {
+      allow read: if true;
+
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['rating', 'timestamp', 'uid'])
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.timestamp == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    // Theme likes: a user toggles only their own like
+    match /theme_likes/{themeId}/likes/{uid} {
+      allow read: if true;
+
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['timestamp', 'uid'])
+        && request.resource.data.timestamp == request.time;
+
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Download counter: the client may only add 1 to count (and set lastDownloaded)
+    match /theme_downloads/{themeId} {
+      allow read: if true;
+
+      allow create: if request.resource.data.count == 1
+        && request.resource.data.keys().hasOnly(['count', 'lastDownloaded']);
+
+      allow update: if request.resource.data.count == resource.data.count + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count', 'lastDownloaded']);
+
+      allow delete: if isAdmin();
+    }
+
+    // Everything else is denied by default
+  }
+}

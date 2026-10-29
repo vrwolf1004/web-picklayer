@@ -36,7 +36,6 @@ function updateMenuIcon(lang){
   const menuIcon = document.getElementById('menu-icon');
   if(!menuIcon) { console.warn('menu-icon element not found'); return; }
   const iconFile = MENU_ICON_MAP_LANG[lang] || 'menu-basic.svg';
-  console.log('updateMenuIcon:', lang, '→', iconFile);
   menuIcon.src = 'assets/' + iconFile;
 }
 

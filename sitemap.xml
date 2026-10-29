@@ -3,7 +3,7 @@
   <!-- 홈페이지 -->
   <url>
     <loc>https://www.picklayer.net/</loc>
-    <lastmod>2026-03-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -11,21 +11,21 @@
   <!-- 정책 페이지 -->
   <url>
     <loc>https://www.picklayer.net/privacy.html</loc>
-    <lastmod>2026-03-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
     <loc>https://www.picklayer.net/terms.html</loc>
-    <lastmod>2026-03-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
     <loc>https://www.picklayer.net/about.html</loc>
-    <lastmod>2026-03-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
