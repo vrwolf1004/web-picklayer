@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'index.html'
-      - '.env.example'
+      - 'site/index.html'
+      - 'docs/.env.example'
       - 'build.js'
       - 'package.json'
       - '.github/workflows/build-site.yml'
@@ -44,7 +44,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add index.html
+          git add site/index.html
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-build Firebase config into index.html")
 
       - name: Push changes

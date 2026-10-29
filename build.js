@@ -27,7 +27,7 @@ if (!firebaseConfig.apiKey) {
 }
 
 // index.html 읽기
-const indexPath = path.join(__dirname, 'index.html');
+const indexPath = path.join(__dirname, 'site', 'index.html');
 let html = fs.readFileSync(indexPath, 'utf-8');
 
 // Firebase 설정 부분 찾기 및 대체
