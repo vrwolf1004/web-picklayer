@@ -53,18 +53,16 @@
 
 ---
 
-## 프로젝트 구조 (2026-10-29)
+## 프로젝트 구조
 
 | 경로 | 내용 |
 |---|---|
-| `site/` | 사이트 소스 전체 (배포 폴더). `index.html`, 페이지, `css`, `js`, `assets`, `theme`, `CNAME`, `_headers` 등 |
-| `docs/` | 문서와 환경 변수 예시 (`README.md`, `.env.example`) |
-| `build.js` | `site/index.html` 에 Firebase 설정을 넣는 빌드 스크립트 (루트) |
-| `package.json`, `package-lock.json` | 빌드 의존성 (루트) |
-| `.github/workflows/build-site.yml` | `site/index.html` 이 바뀌면 빌드 값을 넣어 자동 커밋 |
+| `index.html`, `about.html` 등 페이지 | 사이트 소스 (루트, GitHub Pages `main` 의 `/` 로 배포) |
+| `css`, `js`, `assets`, `theme`, `i18n`, `blog`, `admin` | 사이트 리소스 |
+| `CNAME`, `_headers`, `robots.txt`, `sitemap.xml` | 도메인과 배포 설정 |
+| `build.js`, `package.json`, `package-lock.json` | 빌드 스크립트와 의존성 (루트) |
+| `.github/workflows/build-site.yml` | `index.html` 이 바뀌면 빌드 값을 넣어 자동 커밋 |
+| `docs/` | 문서 (`.env.example` 등) |
 
-### 배포
+로컬 빌드는 `docs/.env.example` 을 참고해 `.env.local` 을 만든 뒤 `npm run build` 를 실행합니다. 이 명령은 `index.html` 을 직접 수정합니다.
 
-- Cloudflare Pages 의 **Build output directory** 는 `site` 입니다.
-- Build command 는 비워 둡니다. Firebase 값은 GitHub Actions 가 `site/index.html` 에 넣습니다.
-- 로컬에서 빌드하려면 `docs/.env.example` 을 참고해 `.env.local` 을 만든 뒤 `npm run build` 를 실행합니다. 이 명령은 `site/index.html` 을 직접 수정합니다.
