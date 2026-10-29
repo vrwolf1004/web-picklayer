@@ -207,7 +207,7 @@ p,li,span,label,td,th,h1,h2,h3,h4,h5,h6{overflow-wrap:break-word;word-break:brea
 .sidebar{display:flex;flex-direction:column;gap:18px}
 
 /* Desktop ad section (above comments) */
-.ad-section{padding:16px}
+.ad-section{padding:0}
 #desktop-ad-banner{padding:0;overflow:hidden}
 #desktop-ad-banner .ad-image-link{display:block;line-height:0}
 #desktop-ad-banner img{width:100%;height:auto;border-radius:0}

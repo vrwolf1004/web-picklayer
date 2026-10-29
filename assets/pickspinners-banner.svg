@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200" viewBox="0 0 360 200" role="img" aria-label="PickSpinners - 무료 CSS 로딩 스피너 라이브러리">
-  <rect width="360" height="200" rx="12" fill="#0f1420"/>
-  <circle cx="180" cy="62" r="30" fill="none" stroke="#2d3a55" stroke-width="9"/>
-  <path d="M180 32 A30 30 0 0 1 210 62" fill="none" stroke="#58a6ff" stroke-width="9" stroke-linecap="round"/>
-  <text x="180" y="122" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" fill="#e6edf3">PickSpinners</text>
-  <text x="180" y="150" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#8b949e">무료 CSS 로딩 스피너 라이브러리</text>
-  <text x="180" y="180" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#58a6ff">pickspinners.com →</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="300" viewBox="0 0 360 300" role="img" aria-label="PickSpinners - 무료 CSS 로딩 스피너 라이브러리">
+  <rect width="360" height="300" rx="12" fill="#0f1420"/>
+  <circle cx="180" cy="100" r="42" fill="none" stroke="#2d3a55" stroke-width="12"/>
+  <path d="M180 58 A42 42 0 0 1 222 100" fill="none" stroke="#58a6ff" stroke-width="12" stroke-linecap="round"/>
+  <text x="180" y="190" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" fill="#e6edf3">PickSpinners</text>
+  <text x="180" y="222" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#8b949e">무료 CSS 로딩 스피너 라이브러리</text>
+  <text x="180" y="262" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#58a6ff">pickspinners.com →</text>
 </svg>
